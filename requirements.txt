@@ -3,3 +3,4 @@ requests
 ultralytics
 streamlit
 opencv-python-headless
+ngrok

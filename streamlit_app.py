@@ -56,7 +56,8 @@ if submit:
         st.sidebar.error(f"Erreur : {e}")
 
 # URL du flux MJPEG Tasmota
-MJPEG_URL = f"http://{tasmota_ip}:81/stream"
+#MJPEG_URL = f"http://{tasmota_ip}:81/stream"
+MJPEG_URL = "https://c19bfdefae9c.ngrok-free.app/cam.mjpeg"
 
   
 st.title("Détection d'objets")

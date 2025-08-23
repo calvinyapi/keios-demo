@@ -4,3 +4,4 @@ yolov8n.pt
  
 # Fichier d'environnement local
 .env
+.DS_Store
