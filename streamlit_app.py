@@ -3,38 +3,21 @@ import requests
 import streamlit as st
 import cv2
 from ultralytics import YOLO
-import tempfile
-import numpy as np
+import time
 
 MODEL_URL = "https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8n.pt"
 MODEL_PATH = "yolov8n.pt"
-frame_placeholder = st.empty()
-run = st.checkbox("Démarrer la détection en temps réel")
 
-# Télécharger le modèle YOLOv8n si absent (pour déploiement Streamlit)
+# Télécharger le modèle YOLOv8n si absent
 if not os.path.exists(MODEL_PATH):
     with st.spinner("Téléchargement du modèle YOLOv8n..."):
         r = requests.get(MODEL_URL)
         r.raise_for_status()
         with open(MODEL_PATH, "wb") as f:
             f.write(r.content)
-        st.success("Modèle YOLOv8n téléchargé.")
-import base64
-from io import BytesIO
+    st.success("Modèle YOLOv8n téléchargé.")
 
-MODEL_URL = "https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8n.pt"
-MODEL_PATH = "yolov8n.pt"
-
-# Télécharger le modèle YOLOv8n si absent (pour déploiement Streamlit)
-if not os.path.exists(MODEL_PATH):
-    with st.spinner("Téléchargement du modèle YOLOv8n..."):
-        r = requests.get(MODEL_URL)
-        r.raise_for_status()
-        with open(MODEL_PATH, "wb") as f:
-            f.write(r.content)
-        st.success("Modèle YOLOv8n téléchargé.")
-
-# Logo dans la sidebar
+# Sidebar pour configuration WiFi Tasmota
 st.sidebar.image("./images/logo.png", use_container_width=True)
 st.sidebar.header("Configurer le WiFi Tasmota")
 with st.sidebar.form("wifi_form"):
@@ -43,7 +26,6 @@ with st.sidebar.form("wifi_form"):
     password = st.text_input("Mot de passe WiFi", type="password")
     submit = st.form_submit_button("Changer le WiFi")
 
-# Afficher la valeur actuelle de tasmota_ip
 st.sidebar.info(f"TASMOTA_IP utilisée : {tasmota_ip}")
 
 if submit:
@@ -57,26 +39,21 @@ if submit:
     except Exception as e:
         st.sidebar.error(f"Erreur : {e}")
 
-# URL du flux MJPEG Tasmota
-#MJPEG_URL = f"http://{tasmota_ip}:81/stream"
+# URL du flux MJPEG (ngrok public)
 MJPEG_URL = "https://c19bfdefae9c.ngrok-free.app/cam.mjpeg"
 
-  
 st.title("Détection d'objets")
 
-# Charger modèle YOLOv8 nano (rapide)
+# Charger le modèle YOLOv8 nano
 model = YOLO(MODEL_PATH)
-
 
 # Capture du flux MJPEG via OpenCV
 cap = cv2.VideoCapture(MJPEG_URL)
-
 if not cap.isOpened():
-    st.error("Erreur : impossible d'ouvrir le flux vidéo. Vérifie l'URL et la connexion réseau.")
+    st.error("Impossible d'ouvrir le flux vidéo. Vérifie l'URL ou la connexion réseau.")
     st.stop()
 
-
-# Centrage de la vidéo avec du CSS
+# Centrage vidéo
 st.markdown("""
     <style>
     .centered-video {
@@ -88,69 +65,40 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 frame_placeholder = st.empty()
+run = st.checkbox("Démarrer la détection en temps réel")
 
-while True:
+# Boucle principale compatible Streamlit Cloud
+while run:
     ret, frame = cap.read()
     if not ret:
         st.warning("Pas de frame reçue, fin du flux ou erreur.")
         break
 
-
     # Inference YOLO
     results = model(frame)
-
-    # Filtrer pour ne garder que les personnes (classe 0) et visages (si le modèle le supporte)
-    # Pour YOLOv8 COCO, la classe 0 = person
-    # Pour les visages, il faut un modèle spécialisé (voir commentaire ci-dessous)
     boxes = results[0].boxes
     classes = results[0].names
     keep = []
     for i, box in enumerate(boxes):
         class_id = int(box.cls[0].item())
         class_name = classes[class_id]
-        if class_name == "person" or class_name == "face":
+        if class_name == "person":  # Le modèle COCO ne détecte pas les visages
             keep.append(i)
 
-    # Si on a gardé des détections, on les affiche, sinon on affiche l'image d'origine
     if keep:
-        # Annoter uniquement les détections voulues
         results[0].boxes = boxes[keep]
         annotated_frame = results[0].plot()
     else:
         annotated_frame = frame
 
-    # Convertir BGR OpenCV -> RGB pour Streamlit
+    # Convertir BGR -> RGB
     annotated_frame = cv2.cvtColor(annotated_frame, cv2.COLOR_BGR2RGB)
 
-
-    # Convertir l'image annotée en PNG base64
-    buffer = BytesIO()
-    import PIL.Image
-    PIL.Image.fromarray(annotated_frame).save(buffer, format="PNG")
-    img_b64 = base64.b64encode(buffer.getvalue()).decode()
-
-    # Afficher l'image centrée et agrandie
-    frame_placeholder.markdown(
-        f'<div class="centered-video">'
-        f'<img src="data:image/png;base64,{img_b64}" style="width:80vw; max-width:100%;"/>'
-        f'</div>', unsafe_allow_html=True
-    )
-
-    # Petite pause pour laisser le temps à Streamlit d'afficher
-    while run:
-    ret, frame = cap.read()
-    if not ret:
-        st.warning("Pas de frame reçue.")
-        break
-
-    results = model(frame)
-    annotated_frame = results[0].plot()
-    annotated_frame = cv2.cvtColor(annotated_frame, cv2.COLOR_BGR2RGB)
-
-    # Affichage direct sans conversion en Base64
+    # Affichage direct dans Streamlit
     frame_placeholder.image(annotated_frame, channels="RGB")
 
     # Petite pause pour ne pas saturer Streamlit
     time.sleep(0.05)
+
 cap.release()
 st.success("Flux vidéo terminé ou arrêté par l'utilisateur.")
