@@ -9,19 +9,29 @@ if not os.path.exists(MODEL_PATH):
         with open(MODEL_PATH, "wb") as f:
             f.write(r.content)
         st.success("Modèle YOLOv8n téléchargé.")
+
+
 import os
-
-
+import requests
 import streamlit as st
 import cv2
 from ultralytics import YOLO
 import tempfile
 import numpy as np
-import requests
 import base64
 from io import BytesIO
 
+MODEL_URL = "https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8n.pt"
+MODEL_PATH = "yolov8n.pt"
 
+# Télécharger le modèle YOLOv8n si absent (pour déploiement Streamlit)
+if not os.path.exists(MODEL_PATH):
+    with st.spinner("Téléchargement du modèle YOLOv8n..."):
+        r = requests.get(MODEL_URL)
+        r.raise_for_status()
+        with open(MODEL_PATH, "wb") as f:
+            f.write(r.content)
+        st.success("Modèle YOLOv8n téléchargé.")
 
 # Logo dans la sidebar
 st.sidebar.image("./images/logo.png", use_container_width=True)
