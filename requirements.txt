@@ -3,4 +3,3 @@ requests
 ultralytics
 streamlit
 opencv-python-headless
-os
