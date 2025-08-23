@@ -1,3 +1,11 @@
+import os
+import requests
+import streamlit as st
+import cv2
+from ultralytics import YOLO
+import tempfile
+import numpy as np
+
 MODEL_URL = "https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8n.pt"
 MODEL_PATH = "yolov8n.pt"
 
@@ -9,15 +17,6 @@ if not os.path.exists(MODEL_PATH):
         with open(MODEL_PATH, "wb") as f:
             f.write(r.content)
         st.success("Modèle YOLOv8n téléchargé.")
-
-
-import os
-import requests
-import streamlit as st
-import cv2
-from ultralytics import YOLO
-import tempfile
-import numpy as np
 import base64
 from io import BytesIO
 
