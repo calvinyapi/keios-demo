@@ -1,4 +1,3 @@
 # Ignorer les fichiers/dossiers Python et modèles
 __pycache__/
 yolov8n.pt
-images/
