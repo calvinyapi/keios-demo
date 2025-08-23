@@ -1,3 +1,4 @@
+import os
 
 
 import streamlit as st
@@ -15,7 +16,7 @@ from io import BytesIO
 st.sidebar.image("./images/logo.png", use_container_width=True)
 st.sidebar.header("Configurer le WiFi Tasmota")
 with st.sidebar.form("wifi_form"):
-    tasmota_ip = st.text_input("IP de l'appareil Tasmota", "192.168.1.89")
+    tasmota_ip = st.text_input("IP de l'appareil Tasmota", os.getenv("TASMOTA_IP"))
     ssid = st.text_input("Nouveau SSID WiFi")
     password = st.text_input("Mot de passe WiFi", type="password")
     submit = st.form_submit_button("Changer le WiFi")
