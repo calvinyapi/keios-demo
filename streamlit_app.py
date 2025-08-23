@@ -41,6 +41,9 @@ with st.sidebar.form("wifi_form"):
     password = st.text_input("Mot de passe WiFi", type="password")
     submit = st.form_submit_button("Changer le WiFi")
 
+# Afficher la valeur actuelle de tasmota_ip
+st.sidebar.info(f"TASMOTA_IP utilisée : {tasmota_ip}")
+
 if submit:
     url = f"http://{tasmota_ip}/cm?cmnd=Backlog+WifiSsid+{ssid};WifiPassword+{password};Restart+1"
     try:
