@@ -8,6 +8,8 @@ import numpy as np
 
 MODEL_URL = "https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8n.pt"
 MODEL_PATH = "yolov8n.pt"
+frame_placeholder = st.empty()
+run = st.checkbox("Démarrer la détection en temps réel")
 
 # Télécharger le modèle YOLOv8n si absent (pour déploiement Streamlit)
 if not os.path.exists(MODEL_PATH):
@@ -135,8 +137,20 @@ while True:
     )
 
     # Petite pause pour laisser le temps à Streamlit d'afficher
-    if cv2.waitKey(1) & 0xFF == ord('q'):
+    while run:
+    ret, frame = cap.read()
+    if not ret:
+        st.warning("Pas de frame reçue.")
         break
 
+    results = model(frame)
+    annotated_frame = results[0].plot()
+    annotated_frame = cv2.cvtColor(annotated_frame, cv2.COLOR_BGR2RGB)
+
+    # Affichage direct sans conversion en Base64
+    frame_placeholder.image(annotated_frame, channels="RGB")
+
+    # Petite pause pour ne pas saturer Streamlit
+    time.sleep(0.05)
 cap.release()
 st.success("Flux vidéo terminé ou arrêté par l'utilisateur.")
