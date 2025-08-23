@@ -1,3 +1,14 @@
+MODEL_URL = "https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8n.pt"
+MODEL_PATH = "yolov8n.pt"
+
+# Télécharger le modèle YOLOv8n si absent (pour déploiement Streamlit)
+if not os.path.exists(MODEL_PATH):
+    with st.spinner("Téléchargement du modèle YOLOv8n..."):
+        r = requests.get(MODEL_URL)
+        r.raise_for_status()
+        with open(MODEL_PATH, "wb") as f:
+            f.write(r.content)
+        st.success("Modèle YOLOv8n téléchargé.")
 import os
 
 
@@ -39,7 +50,7 @@ MJPEG_URL = f"http://{tasmota_ip}:81/stream"
 st.title("Détection d'objets")
 
 # Charger modèle YOLOv8 nano (rapide)
-model = YOLO('yolov8n.pt')
+model = YOLO(MODEL_PATH)
 
 
 # Capture du flux MJPEG via OpenCV
